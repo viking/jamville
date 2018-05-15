@@ -1,6 +1,8 @@
+// This module contains structures for (de)serialization of OSM XML format.
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "osm")]
-pub struct OSM {
+pub struct Map {
     pub version: String,
     pub generator: String,
     pub note: String,
@@ -724,7 +726,7 @@ mod tests {
                 </relation>
             </osm>
         "##;
-        let osm: OSM = from_str(s).unwrap();
-        println!("{:#?}", osm);
+        let map: Map = from_str(s).unwrap();
+        println!("{:#?}", map);
     }
 }
