@@ -69,14 +69,23 @@ pub struct Node {
     pub changeset: u64,
     pub uid: Option<i64>,
     pub user: Option<String>,
+
+    // tags
+    pub name: Option<String>,
     pub tags: HashMap<String, String>
 }
 
 impl From<osm::Node> for Node {
     fn from(node: osm::Node) -> Node {
+        let mut name = None;
         let mut tags = HashMap::new();
         for tag in node.tags {
-            tags.insert(tag.k, tag.v);
+            if tag.k == "name" {
+                name = Some(tag.v);
+            }
+            else {
+                tags.insert(tag.k, tag.v);
+            }
         }
         Node {
             id: node.id,
@@ -87,6 +96,7 @@ impl From<osm::Node> for Node {
             changeset: node.changeset,
             uid: node.uid,
             user: node.user,
+            name: name,
             tags: tags
         }
     }
@@ -101,14 +111,23 @@ pub struct Way {
     pub uid: Option<i64>,
     pub user: Option<String>,
     pub node_refs: Vec<NodeRef>,
+
+    // tags
+    pub name: Option<String>,
     pub tags: HashMap<String, String>
 }
 
 impl From<osm::Way> for Way {
     fn from(way: osm::Way) -> Way {
+        let mut name = None;
         let mut tags = HashMap::new();
         for tag in way.tags {
-            tags.insert(tag.k, tag.v);
+            if tag.k == "name" {
+                name = Some(tag.v);
+            }
+            else {
+                tags.insert(tag.k, tag.v);
+            }
         }
         let node_refs = way.node_refs.into_iter().map(|node_ref| {
             node_ref.into()
@@ -121,6 +140,7 @@ impl From<osm::Way> for Way {
             uid: way.uid,
             user: way.user,
             node_refs: node_refs,
+            name: name,
             tags: tags
         }
     }
@@ -146,14 +166,23 @@ pub struct Relation {
     pub uid: Option<i64>,
     pub user: Option<String>,
     pub members: Vec<Member>,
+
+    // tags
+    pub name: Option<String>,
     pub tags: HashMap<String, String>
 }
 
 impl From<osm::Relation> for Relation {
     fn from(relation: osm::Relation) -> Relation {
+        let mut name = None;
         let mut tags = HashMap::new();
         for tag in relation.tags {
-            tags.insert(tag.k, tag.v);
+            if tag.k == "name" {
+                name = Some(tag.v);
+            }
+            else {
+                tags.insert(tag.k, tag.v);
+            }
         }
         let members = relation.members.into_iter().map(|member| {
             member.into()
@@ -166,6 +195,7 @@ impl From<osm::Relation> for Relation {
             uid: relation.uid,
             user: relation.user,
             members: members,
+            name: name,
             tags: tags
         }
     }
@@ -204,13 +234,12 @@ mod tests {
             uid: Some(123),
             user: Some("dude".to_string()),
             tags: vec![
-                osm::Tag { k: "foo".to_string(), v: "bar".to_string() },
+                osm::Tag { k: "name".to_string(), v: "foo".to_string() },
                 osm::Tag { k: "baz".to_string(), v: "qux".to_string() }
             ]
         };
 
         let mut tags = HashMap::new();
-        tags.insert("foo".to_string(), "bar".to_string());
         tags.insert("baz".to_string(), "qux".to_string());
         let expected = Node {
             id: 1,
@@ -221,6 +250,7 @@ mod tests {
             changeset: 123,
             uid: Some(123),
             user: Some("dude".to_string()),
+            name: Some("foo".to_string()),
             tags: tags
         };
         let actual: Node = node.into();
@@ -242,13 +272,12 @@ mod tests {
                 osm::NodeRef { id: 3 }
             ],
             tags: vec![
-                osm::Tag { k: "foo".to_string(), v: "bar".to_string() },
+                osm::Tag { k: "name".to_string(), v: "foo".to_string() },
                 osm::Tag { k: "baz".to_string(), v: "qux".to_string() }
             ]
         };
 
         let mut tags = HashMap::new();
-        tags.insert("foo".to_string(), "bar".to_string());
         tags.insert("baz".to_string(), "qux".to_string());
         let expected = Way {
             id: 1,
@@ -262,6 +291,7 @@ mod tests {
                 NodeRef { id: 2 },
                 NodeRef { id: 3 }
             ],
+            name: Some("foo".to_string()),
             tags: tags
         };
         let actual: Way = way.into();
@@ -283,13 +313,12 @@ mod tests {
                 osm::Member { kind: "baz".to_string(), id: 3, role: "grault".to_string() }
             ],
             tags: vec![
-                osm::Tag { k: "foo".to_string(), v: "bar".to_string() },
+                osm::Tag { k: "name".to_string(), v: "foo".to_string() },
                 osm::Tag { k: "baz".to_string(), v: "qux".to_string() }
             ]
         };
 
         let mut tags = HashMap::new();
-        tags.insert("foo".to_string(), "bar".to_string());
         tags.insert("baz".to_string(), "qux".to_string());
         let expected = Relation {
             id: 1,
@@ -303,6 +332,7 @@ mod tests {
                 Member { kind: "bar".to_string(), id: 2, role: "corge".to_string() },
                 Member { kind: "baz".to_string(), id: 3, role: "grault".to_string() }
             ],
+            name: Some("foo".to_string()),
             tags: tags
         };
         let actual: Relation = relation.into();
