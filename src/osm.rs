@@ -1,4 +1,4 @@
-use serde_xml_rs::deserialize;
+use serde_xml_rs::from_str;
 
 #[derive(Debug, Deserialize)]
 #[serde(rename = "osm")]
@@ -21,22 +21,22 @@ struct Meta {
 #[derive(Debug, Deserialize)]
 #[serde(rename = "bounds")]
 struct Bounds {
-    minlat: String, // f64 is broken for attributes
-    minlon: String,
-    maxlat: String,
-    maxlon: String
+    minlat: f64,
+    minlon: f64,
+    maxlat: f64,
+    maxlon: f64
 }
 
 #[derive(Debug, Deserialize)]
 #[serde(rename = "node")]
 struct Node {
-    id: String,
-    lat: String,
-    lon: String,
-    version: String,
+    id: u64,
+    lat: f64,
+    lon: f64,
+    version: u16,
     timestamp: String,
-    changeset: String,
-    uid: String,
+    changeset: u64,
+    uid: u64,
     user: String,
     #[serde(rename = "tag", default)]
     tags: Vec<Tag>
@@ -63,6 +63,6 @@ fn it_works() {
             </node>
         </osm>
     "##;
-    let osm: OSM = deserialize(s.as_bytes()).unwrap();
+    let osm: OSM = from_str(s).unwrap();
     println!("{:#?}", osm);
 }
