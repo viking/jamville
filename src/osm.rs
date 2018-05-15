@@ -1,103 +1,101 @@
-use serde_xml_rs::from_str;
-
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "osm")]
-struct OSM {
-    version: String,
-    generator: String,
-    note: String,
-    meta: Meta,
-    bounds: Bounds,
+pub struct OSM {
+    pub version: String,
+    pub generator: String,
+    pub note: String,
+    pub meta: Meta,
+    pub bounds: Bounds,
     #[serde(rename = "node", default)]
-    nodes: Vec<Node>,
+    pub nodes: Vec<Node>,
     #[serde(rename = "way", default)]
-    ways: Vec<Way>,
+    pub ways: Vec<Way>,
     #[serde(rename = "relation", default)]
-    relations: Vec<Relation>
+    pub relations: Vec<Relation>
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "meta")]
-struct Meta {
-    osm_base: String
+pub struct Meta {
+    pub osm_base: String
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "bounds")]
-struct Bounds {
-    minlat: f64,
-    minlon: f64,
-    maxlat: f64,
-    maxlon: f64
+pub struct Bounds {
+    pub minlat: f64,
+    pub minlon: f64,
+    pub maxlat: f64,
+    pub maxlon: f64
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "node")]
-struct Node {
-    id: u64,
-    lat: f64,
-    lon: f64,
-    version: u16,
-    timestamp: String,
-    changeset: u64,
-    uid: u64,
-    user: String,
+pub struct Node {
+    pub id: u64,
+    pub lat: f64,
+    pub lon: f64,
+    pub version: u16,
+    pub timestamp: String,
+    pub changeset: u64,
+    pub uid: u64,
+    pub user: String,
     #[serde(rename = "tag", default)]
-    tags: Vec<Tag>
+    pub tags: Vec<Tag>
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "tag")]
-struct Tag {
-    k: String,
-    v: String
+pub struct Tag {
+    pub k: String,
+    pub v: String
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "way")]
-struct Way {
-    id: u64,
-    version: u16,
-    timestamp: String,
-    changeset: u64,
-    uid: u64,
-    user: String,
+pub struct Way {
+    pub id: u64,
+    pub version: u16,
+    pub timestamp: String,
+    pub changeset: u64,
+    pub uid: u64,
+    pub user: String,
     #[serde(rename = "nd", default)]
-    node_refs: Vec<NodeRef>,
+    pub node_refs: Vec<NodeRef>,
     #[serde(rename = "tag", default)]
-    tags: Vec<Tag>
+    pub tags: Vec<Tag>
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "nd")]
-struct NodeRef {
+pub struct NodeRef {
     #[serde(rename = "ref")]
-    id: u64
+    pub id: u64
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "relation")]
-struct Relation {
-    id: u64,
-    version: u16,
-    timestamp: String,
-    changeset: u64,
-    uid: u64,
-    user: String,
+pub struct Relation {
+    pub id: u64,
+    pub version: u16,
+    pub timestamp: String,
+    pub changeset: u64,
+    pub uid: u64,
+    pub user: String,
     #[serde(rename = "member", default)]
-    members: Vec<Member>,
+    pub members: Vec<Member>,
     #[serde(rename = "tag", default)]
-    tags: Vec<Tag>
+    pub tags: Vec<Tag>
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "member")]
-struct Member {
+pub struct Member {
     #[serde(rename = "type")]
-    kind: String,
+    pub kind: String,
     #[serde(rename = "ref")]
-    id: u64,
-    role: String
+    pub id: u64,
+    pub role: String
 }
 
 #[test]
@@ -721,6 +719,6 @@ fn it_works() {
             </relation>
         </osm>
     "##;
-    let osm: OSM = from_str(s).unwrap();
+    let osm: OSM = serde_xml_rs::from_str(s).unwrap();
     println!("{:#?}", osm);
 }
