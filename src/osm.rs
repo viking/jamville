@@ -32,14 +32,14 @@ pub struct Bounds {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "node")]
 pub struct Node {
-    pub id: u64,
+    pub id: i64,
     pub lat: f64,
     pub lon: f64,
     pub version: u16,
     pub timestamp: String,
     pub changeset: u64,
-    pub uid: u64,
-    pub user: String,
+    pub uid: Option<i64>,
+    pub user: Option<String>,
     #[serde(rename = "tag", default)]
     pub tags: Vec<Tag>
 }
@@ -54,12 +54,12 @@ pub struct Tag {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "way")]
 pub struct Way {
-    pub id: u64,
+    pub id: i64,
     pub version: u16,
     pub timestamp: String,
     pub changeset: u64,
-    pub uid: u64,
-    pub user: String,
+    pub uid: Option<i64>,
+    pub user: Option<String>,
     #[serde(rename = "nd", default)]
     pub node_refs: Vec<NodeRef>,
     #[serde(rename = "tag", default)]
@@ -70,18 +70,18 @@ pub struct Way {
 #[serde(rename = "nd")]
 pub struct NodeRef {
     #[serde(rename = "ref")]
-    pub id: u64
+    pub id: i64
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename = "relation")]
 pub struct Relation {
-    pub id: u64,
+    pub id: i64,
     pub version: u16,
     pub timestamp: String,
     pub changeset: u64,
-    pub uid: u64,
-    pub user: String,
+    pub uid: Option<i64>,
+    pub user: Option<String>,
     #[serde(rename = "member", default)]
     pub members: Vec<Member>,
     #[serde(rename = "tag", default)]
