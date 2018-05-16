@@ -102,6 +102,12 @@ impl From<osm::Node> for Node {
     }
 }
 
+enum WayDirection {
+    None,
+    Forward,
+    Reverse
+}
+
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub struct Way {
     pub id: i64,
@@ -143,6 +149,71 @@ impl From<osm::Way> for Way {
             name: name,
             tags: tags
         }
+    }
+}
+
+impl Way {
+    pub fn contains_node_id(&self, node_id: i64) -> bool {
+        self.node_refs.iter().find(|nr| nr.id == node_id).is_some()
+    }
+
+    pub fn find_path(&self, start_id: i64, end_id: i64) -> Option<Vec<i64>> {
+        if start_id == end_id {
+            return Some(vec![start_id]);
+        }
+
+        if !self.contains_node_id(start_id) || !self.contains_node_id(end_id) {
+            return None
+        }
+
+        let mut path = Vec::new();
+        let mut direction = WayDirection::None;
+        for node_ref in &self.node_refs {
+            if node_ref.id == start_id {
+                match direction {
+                    WayDirection::None => {
+                        // found start_id first, begin path
+                        direction = WayDirection::Forward;
+                        path.push(node_ref.id);
+                    },
+                    WayDirection::Reverse => {
+                        // found start_id last, return path in reverse
+                        path.push(node_ref.id);
+                        path.reverse();
+                        return Some(path);
+                    },
+                    _ => panic!("invalid direction")
+                }
+            }
+            else if node_ref.id == end_id {
+                match direction {
+                    WayDirection::None => {
+                        // found end_id first, begin path
+                        direction = WayDirection::Reverse;
+                        path.push(node_ref.id);
+                    },
+                    WayDirection::Forward => {
+                        // found end_id last, return path
+                        path.push(node_ref.id);
+                        return Some(path);
+                    },
+                    _ => panic!("invalid direction")
+                }
+            }
+            else {
+                match direction {
+                    WayDirection::None => {
+                        // found unimportant node, do nothing
+                    },
+                    _ => {
+                        // found node en-route, add to path
+                        path.push(node_ref.id);
+                    }
+                }
+            }
+        }
+
+        None
     }
 }
 
@@ -336,6 +407,93 @@ mod tests {
             tags: tags
         };
         let actual: Relation = relation.into();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn way_contains_node_id() {
+        let way = Way {
+            id: 1, version: 123, timestamp: "foo".to_string(), changeset: 123,
+            uid: Some(123), user: Some("dude".to_string()),
+            node_refs: vec![
+                NodeRef { id: 1 },
+                NodeRef { id: 2 },
+                NodeRef { id: 3 }
+            ],
+            name: Some("foo".to_string()), tags: HashMap::new()
+        };
+        assert!(way.contains_node_id(1));
+        assert!(!way.contains_node_id(4));
+    }
+
+    #[test]
+    fn way_find_path_non_existent_ids() {
+        let way = Way {
+            id: 1, version: 123, timestamp: "foo".to_string(), changeset: 123,
+            uid: Some(123), user: Some("dude".to_string()),
+            node_refs: vec![
+                NodeRef { id: 1 },
+                NodeRef { id: 2 },
+                NodeRef { id: 3 }
+            ],
+            name: Some("foo".to_string()), tags: HashMap::new()
+        };
+        assert!(way.find_path(1, 4).is_none());
+        assert!(way.find_path(0, 3).is_none());
+        assert!(way.find_path(0, 4).is_none());
+    }
+
+    #[test]
+    fn way_find_path_same_node() {
+        let way = Way {
+            id: 1, version: 123, timestamp: "foo".to_string(), changeset: 123,
+            uid: Some(123), user: Some("dude".to_string()),
+            node_refs: vec![
+                NodeRef { id: 1 },
+                NodeRef { id: 2 },
+                NodeRef { id: 3 }
+            ],
+            name: Some("foo".to_string()), tags: HashMap::new()
+        };
+
+        let expected = vec![1];
+        let actual = way.find_path(1, 1).expect("couldn't find path");
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn way_find_path_forward() {
+        let way = Way {
+            id: 1, version: 123, timestamp: "foo".to_string(), changeset: 123,
+            uid: Some(123), user: Some("dude".to_string()),
+            node_refs: vec![
+                NodeRef { id: 1 },
+                NodeRef { id: 2 },
+                NodeRef { id: 3 }
+            ],
+            name: Some("foo".to_string()), tags: HashMap::new()
+        };
+
+        let expected = vec![1, 2, 3];
+        let actual = way.find_path(1, 3).expect("couldn't find path");
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn way_find_path_reverse() {
+        let way = Way {
+            id: 1, version: 123, timestamp: "foo".to_string(), changeset: 123,
+            uid: Some(123), user: Some("dude".to_string()),
+            node_refs: vec![
+                NodeRef { id: 1 },
+                NodeRef { id: 2 },
+                NodeRef { id: 3 }
+            ],
+            name: Some("foo".to_string()), tags: HashMap::new()
+        };
+
+        let expected = vec![3, 2, 1];
+        let actual = way.find_path(3, 1).expect("couldn't find path");
         assert_eq!(expected, actual);
     }
 }
