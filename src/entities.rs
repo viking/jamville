@@ -29,6 +29,18 @@ impl From<osm::Map> for Map {
     }
 }
 
+impl Map {
+    pub fn find_node(&self, node_id: i64) -> Option<&Node> {
+        self.nodes.iter().find(|node| node.id == node_id)
+    }
+
+    pub fn ways_for_node(&self, node: &Node) -> Vec<&Way> {
+        self.ways.iter().
+            filter(|way| way.contains_node_id(node.id)).
+            collect()
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Meta {
     pub osm_base: String
@@ -102,6 +114,21 @@ impl From<osm::Node> for Node {
     }
 }
 
+impl Node {
+    pub fn haversine_distance(&self, other: &Node) -> f64 {
+        let r = 6371e3; // meters
+        let phi_1 = self.lat.to_radians();
+        let phi_2 = other.lat.to_radians();
+        let delta_phi = (other.lat - self.lat).to_radians();
+        let delta_lambda = (other.lon - self.lon).to_radians();
+
+        let a = (delta_phi / 2.0).sin().powi(2) * phi_1.cos() * phi_2.cos() *
+            (delta_lambda / 2.0).sin().powi(2);
+        let c = 2.0 * a.sqrt().atan2((1.0 - a).sqrt());
+        return r * c;
+    }
+}
+
 enum WayDirection {
     None,
     Forward,
@@ -157,13 +184,30 @@ impl Way {
         self.node_refs.iter().find(|nr| nr.id == node_id).is_some()
     }
 
+    pub fn neighbors_of_node(&self, node_id: i64) -> Vec<i64> {
+        let mut result = Vec::new();
+        let index = self.node_refs.iter().position(|nr| nr.id == node_id);
+        match index {
+            Some(index) => {
+                if index > 0 {
+                    result.push(self.node_refs[index-1].id);
+                }
+                if index < (self.node_refs.len() - 1) {
+                    result.push(self.node_refs[index+1].id);
+                }
+            },
+            None => {}
+        }
+        return result;
+    }
+
     pub fn find_path(&self, start_id: i64, end_id: i64) -> Option<Vec<i64>> {
         if start_id == end_id {
             return Some(vec![start_id]);
         }
 
         if !self.contains_node_id(start_id) || !self.contains_node_id(end_id) {
-            return None
+            return None;
         }
 
         let mut path = Vec::new();
